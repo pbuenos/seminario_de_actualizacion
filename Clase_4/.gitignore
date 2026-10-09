@@ -1,2 +1,5 @@
 Clase_2/*.pdf
 Clase_4/*.pptx
+.venv/
+__pycache__/
+*.py[cod]
