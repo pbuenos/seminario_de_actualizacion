@@ -8,6 +8,8 @@ if sys.version_info >= (3, 13):
     sys.modules.setdefault("pyaudioop", audioop)
 
 import gradio as gr
+import uvicorn
+from fastapi import FastAPI
 from gradio_client import Client
 
 
@@ -98,9 +100,12 @@ with gr.Blocks(title="Semáforo de reseñas") as demo:
         "para tomar decisiones sobre clientes."
     )
 
+app = gr.mount_gradio_app(FastAPI(), demo, path="/")
+
 
 if __name__ == "__main__":
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=int(os.environ.get("PORT", "7860")),
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", "7860")),
     )

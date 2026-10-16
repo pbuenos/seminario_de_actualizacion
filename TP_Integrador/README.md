@@ -85,6 +85,9 @@ no cambiar esa configuración, creá este servicio desde el panel de Render:
    una reseña positiva, una negativa y una vacía.
 
 Render entrega el puerto en la variable `PORT`; `app.py` la lee al iniciar.
+El archivo `.python-version` fija Python 3.13.4; si Render usa una versión
+distinta, revisá que el Root Directory apunte a esta carpeta y que no haya una
+variable `PYTHON_VERSION` que lo sobrescriba.
 En el plan gratuito el servicio se suspende tras 15 minutos sin tráfico y el
 arranque puede tardar alrededor de un minuto. La Space puede tener cola,
 inicio en frío o cuota diaria agotada en ZeroGPU. No se necesitan créditos de
