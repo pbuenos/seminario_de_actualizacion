@@ -14,7 +14,7 @@ pública con ZeroGPU que ejecuta el modelo. Así Render no descarga ni mantiene
 en memoria los pesos (el archivo de Cardiff ocupa alrededor de 1,11 GB).
 ZeroGPU asigna una GPU durante la inferencia y depende de cuota y disponibilidad.
 
-La notebook `Experimentos_modelos.ipynb` compara este modelo con
+La notebook `TP_Bueno_Pereyra_Pedro.ipynb` compara este modelo con
 [`pysentimiento/robertuito-sentiment-analysis`](https://huggingface.co/pysentimiento/robertuito-sentiment-analysis)
 usando las mismas frases etiquetadas manualmente. También contrasta
 `pipeline` local con una llamada remota a la API Gradio mediante `gradio_client`.
@@ -22,8 +22,11 @@ La Space usa Gradio nativo porque ZeroGPU requiere una función Gradio decorada
 con `@spaces.GPU`; por eso la app usa `gradio_client` en vez de
 `InferenceClient` para llamar a esta Space. Es una adaptación de la arquitectura
 por la compatibilidad del hardware elegido; tenelo presente al explicar la
-decisión. Ejecutá todas las celdas para producir resultados y tiempos medidos
-en tu propio entorno; no copies resultados supuestos.
+decisión. La consigna pide literalmente `InferenceClient`; esa parte no se cumple
+de forma literal con esta Space, y la notebook deja registrada la diferencia. Para
+cumplirla habría que migrar a un endpoint/proveedor compatible, que puede tener
+otros límites o costos. Ejecutá todas las celdas para producir resultados y
+tiempos medidos en tu propio entorno; no copies resultados supuestos.
 
 ## Ejecutar en Windows
 
@@ -55,12 +58,15 @@ alrededor de 1,11 GB. Si tu equipo no tiene memoria suficiente, usá Colab.
 
 ## Informe y presentación
 
-Se incluyen borradores de cinco páginas y siete diapositivas:
-`TP_Apellido_Nombre.pdf` y `TP_Apellido_Nombre.pptx`. Están marcados como
-borrador: faltan ejecutar el notebook, completar resultados reales, publicar
-los servicios, agregar URLs y una captura de la app funcionando, y reemplazar
-el nombre de ejemplo. No entregues esos archivos sin completar y verificar
-esas evidencias.
+Se incluyen un informe y una presentación: `TP_Bueno_Pereyra_Pedro.pdf` y
+`TP_Bueno_Pereyra_Pedro.pptx`. También se entrega
+`TP_Bueno_Pereyra_Pedro.ipynb`. Los entregables contienen
+los resultados medidos del notebook (8/10 aciertos para cada modelo), los
+tiempos de la prueba local/remota, el nombre del estudiante y las URLs de Render
+y Hugging Face. La carpeta `evidencias/` incluye capturas de una prueba positiva,
+una negativa y la validación de una reseña vacía; las dos primeras se incorporan
+al informe y las tres a la presentación. Antes de entregar, verificar los enlaces
+y renombrar los archivos si la consigna lo solicita.
 
 El contenido se puede regenerar desde `TP_Integrador` con:
 
@@ -115,18 +121,19 @@ Inference Providers: `gradio_client` llama a la API de la Space.
   comparación local con `pipeline`.
 - `hf_space/`: servicio de modelo para publicar como una Space Gradio con
   ZeroGPU.
-- `Experimentos_modelos.ipynb`: comparación reproducible, laboratorio y
-  mediciones.
+- `Experimentos_modelos.ipynb`: notebook editable de laboratorio; la copia para
+  entregar usa el nombre exigido por la consigna.
+- `TP_Bueno_Pereyra_Pedro.ipynb`: copia del cuaderno ejecutado para entregar.
+- `TP_Bueno_Pereyra_Pedro.pdf` y `TP_Bueno_Pereyra_Pedro.pptx`: informe y
+  presentación con resultados y evidencias de las pruebas.
 - `tests/test_app.py`: pruebas de la lógica de presentación de resultados.
-- `TP_Apellido_Nombre.pdf` y `TP_Apellido_Nombre.pptx`: borradores de informe
-  y presentación; requieren completar los resultados y evidencias reales.
 - `generar_entregables.py` y `requirements-documentos.txt`: generación de los
   borradores en PDF y PowerPoint.
 
 ## Entrega y enlaces
 
-- **App publicada:** completar después del deploy.
-- **Carpeta del TP en GitHub:** completar con el enlace al repositorio.
+- **App publicada:** https://semaforo-de-resenas.onrender.com/
+- **Carpeta del TP en GitHub:** https://github.com/pbuenos/seminario_de_actualizacion/tree/main/TP_Integrador
 - **Ayuda de IA generativa:** se usó como apoyo para proponer y documentar la
   estructura inicial, revisar código y preparar pruebas. Verificá cada
   resultado y declaralo con precisión en el informe y la presentación.
