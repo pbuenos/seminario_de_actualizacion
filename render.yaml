@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: clase-5-gradio
+    runtime: python
+    plan: free
+    buildCommand: pip install -r Clase_5/requirements-gradio.txt
+    startCommand: python Clase_5/gradio_app.py

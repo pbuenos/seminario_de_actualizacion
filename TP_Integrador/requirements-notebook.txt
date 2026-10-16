@@ -1,0 +1,6 @@
+-r requirements.txt
+ipykernel>=6.29,<7
+pandas>=2.2,<3
+torch>=2.6
+transformers>=4.46,<5
+sentencepiece
