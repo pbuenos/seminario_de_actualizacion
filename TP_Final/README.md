@@ -37,6 +37,8 @@ El proyecto utiliza `WA_Fn-UseC_-HR-Employee-Attrition.csv`, un dataset de demos
 
 El entrenamiento utiliza diez variables: `Age`, `Department`, `JobRole`, `MonthlyIncome`, `JobSatisfaction`, `YearsAtCompany`, `OverTime`, `DistanceFromHome`, `WorkLifeBalance` y `YearsSinceLastPromotion`. No se usan identificadores ni atributos como `Gender`.
 
+El notebook de análisis `ibm-hr-analytics-employee-attrition-performance.ipynb` también lee el CSV local ubicado en la raíz de `TP_Final`. El notebook reproducible del proyecto es `notebook/entrenamiento.ipynb`.
+
 Se comparan dos candidatos: Regresión Logística y Random Forest. La selección se realiza mediante F1 promedio en validación cruzada estratificada de 5 particiones sobre el conjunto de entrenamiento; el conjunto de prueba se reserva para la evaluación final. Ambos candidatos usan:
 
 - `StandardScaler` para variables numéricas.
@@ -66,7 +68,7 @@ El CSV debe permanecer en `TP_Final/WA_Fn-UseC_-HR-Employee-Attrition.csv`.
 
 ## API
 
-- `GET /health`: devuelve `{"estado": "ok"}`.
+- `GET /health`: informa el estado, el modelo cargado, la versión de scikit-learn y el CSV usado.
 - `POST /predecir`: recibe el JSON del formulario y devuelve predicción, probabilidad y nivel de riesgo.
 - Campos inválidos o incompletos: HTTP `422`.
 - Errores internos: HTTP `500`.
