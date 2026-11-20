@@ -16,8 +16,8 @@ client = TestClient(main.app)
 def empleado_valido():
     return {
         "edad": 29,
-        "departamento": "Ventas",
-        "rol": "Ejecutivo comercial",
+        "departamento": "Sales",
+        "rol": "Sales Executive",
         "salario_mensual": 3200,
         "satisfaccion_laboral": 3,
         "anos_en_la_empresa": 2,
@@ -35,6 +35,7 @@ def test_health():
     assert cuerpo["estado"] == "ok"
     assert "modelo" in cuerpo
     assert "scikit_learn" in cuerpo
+    assert cuerpo["dataset"] == "WA_Fn-UseC_-HR-Employee-Attrition.csv"
 
 
 def test_predecir():
@@ -59,5 +60,20 @@ def test_campo_faltante_devuelve_422():
 def test_tipo_incorrecto_devuelve_422():
     datos = empleado_valido()
     datos["edad"] = "veinte"
+    respuesta = client.post("/predecir", json=datos)
+    assert respuesta.status_code == 422
+
+
+def test_categoria_valida_del_dataset_se_acepta():
+    datos = empleado_valido()
+    datos["departamento"] = "Research & Development"
+    datos["rol"] = "Manager"
+    respuesta = client.post("/predecir", json=datos)
+    assert respuesta.status_code == 200
+
+
+def test_categoria_ajena_al_dataset_devuelve_422():
+    datos = empleado_valido()
+    datos["rol"] = "Analista"
     respuesta = client.post("/predecir", json=datos)
     assert respuesta.status_code == 422

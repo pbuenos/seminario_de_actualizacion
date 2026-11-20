@@ -4,6 +4,8 @@ from pathlib import Path
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -92,14 +94,14 @@ def crear_pdf() -> None:
         p("2. Contrato de la API", "PreguntaTP"),
         p("GET /health", "PreguntaTP"),
         p('Entrada: sin cuerpo. Salida 200: {"estado":"ok","modelo":"random_forest",'
-          '"scikit_learn":"1.8.0"}'),
+          '"scikit_learn":"1.8.0","dataset":"WA_Fn-UseC_-HR-Employee-Attrition.csv"}'),
         p("POST /predecir", "PreguntaTP"),
         p(
             "Ejemplo de entrada:",
             "CuerpoTP",
         ),
         p(
-            '{"edad":29,"departamento":"Ventas","rol":"Ejecutivo comercial",'
+            '{"edad":29,"departamento":"Sales","rol":"Sales Executive",'
             '"salario_mensual":3200,"satisfaccion_laboral":3,'
             '"anos_en_la_empresa":2,"horas_extras":"Yes",'
             '"distancia_al_hogar":15,"equilibrio_vida_trabajo":3,'
@@ -107,7 +109,7 @@ def crear_pdf() -> None:
             "CodeTP",
         ),
         p(
-            'Salida 200: {"prediccion":"Probable abandono","probabilidad":0.5338,'
+            'Salida 200: {"prediccion":"Probable abandono","probabilidad":0.6606,'
             '"riesgo":"Medio"}'
         ),
         p(
@@ -147,8 +149,22 @@ def crear_pdf() -> None:
             "la funcion resultan menos sencillos para scikit-learn y numpy."
         ),
         p(
-            "El modelo Random Forest exportado pesa aproximadamente 5.60 MB y entra "
-            "holgadamente en el limite de memoria indicado para esta entrega."
+            "El archivo incluido contiene 1470 filas y 35 columnas; no son registros "
+            "reales de empleados de IBM. Se usaron diez variables no identificatorias: "
+            "edad, departamento, rol, salario, satisfaccion, antiguedad, horas extra, "
+            "distancia, equilibrio vida-trabajo y anos desde promocion. La etiqueta "
+            "Attrition contiene 1233 No y 237 Yes."
+        ),
+        p(
+            "Se compararon Regresion Logistica y Random Forest por F1 medio en "
+            "validacion cruzada estratificada de 5 particiones sobre entrenamiento. "
+            "Logistica obtuvo 44.72% y Random Forest 51.08%; se eligio Random Forest. "
+            "El conjunto de prueba se reservo para la evaluacion final."
+        ),
+        p(
+            "En los 294 casos de prueba: accuracy 82.99%, precision 45.71%, "
+            "recall 34.04%, F1 39.02% y ROC-AUC 75.18%. Matriz: "
+            "[[228, 19], [31, 16]]. El modelo ocupa aproximadamente 3.03 MB."
         ),
         p(
             f'<b>Aplicacion publicada:</b> <link href="{APP_URL}">{APP_URL}</link>. '
@@ -203,8 +219,9 @@ def crear_pdf() -> None:
             "y nunca dentro de GitHub, .env incluido, ni en el frontend."
         ),
         p(
-            "El dataset es sintetico y el modelo no debe decidir despidos. Puede "
-            "servir para mostrar patrones generales, pero no establece causalidad "
+            "El dataset IBM HR es una muestra de demostracion y no son registros "
+            "reales de empleados de IBM. El modelo no debe decidir despidos: puede "
+            "servir para estudiar patrones del dataset, pero no establece causalidad "
             "ni reemplaza una revision humana."
         ),
         p("Uso de IA generativa", "SeccionTP"),
@@ -232,38 +249,336 @@ def crear_ppt() -> None:
     prs.slide_width = Inches(13.333)
     prs.slide_height = Inches(7.5)
 
-    slides = [
-        ("Riesgo de abandono de empleados", f"{STUDENT_NAME} | IFTS N.º 18"),
-        ("Problema y datos", "Predecir abandono laboral. Dataset sintetico reproducible de 2000 registros."),
-        ("Datos y modelo", "Se compararon Regresion Logistica y Random Forest. Random Forest tuvo el mejor F1."),
-        ("Metricas finales", "Accuracy 60.25% | Precision 60.09% | Recall 65.69% | F1 62.76% | ROC-AUC 63.59%"),
-        ("Arquitectura", "Navegador -> frontend -> POST JSON -> FastAPI -> modelo.joblib -> respuesta"),
-        ("Contrato y demo", "GET /health y POST /predecir. Pydantic valida 422. Demo valida y entrada invalida."),
-        ("Deploy", f"Render: {APP_URL}\nGitHub: {GITHUB_URL}"),
-        ("Errores reales", "No hubo errores durante el deploy. En desarrollo local: puerto 8000 ocupado (10048), se cambió a 8080; error de formato al imprimir métricas, corregido separando textos y números."),
-        ("Limites y seguridad", "Arranque en frio, 1000 usuarios simultaneos, plan terminado, secretos fuera de GitHub."),
-        ("Uso de IA y conclusion", "IA como asistente para resolver dudas, evaluar decisiones y apoyar la implementacion. Verificacion con ejecucion local, API y tests."),
-        ("Conclusión y próximos pasos", "Proyecto técnico funcionando. Mejoras: datos reales, explicabilidad y ajuste de umbral."),
+    navy = RGBColor(20, 33, 61)
+    teal = RGBColor(0, 140, 149)
+    orange = RGBColor(252, 163, 17)
+    pale = RGBColor(242, 246, 248)
+    ink = RGBColor(38, 50, 56)
+    muted = RGBColor(95, 107, 115)
+    white = RGBColor(255, 255, 255)
+    green = RGBColor(28, 132, 86)
+    red = RGBColor(177, 52, 52)
+
+    def add_text(slide, text, x, y, w, h, size=20, color=ink, bold=False,
+                 align=PP_ALIGN.LEFT, valign=MSO_ANCHOR.MIDDLE):
+        shape = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
+        frame = shape.text_frame
+        frame.clear()
+        frame.word_wrap = True
+        frame.vertical_anchor = valign
+        for index, line in enumerate(text.split("\n")):
+            paragraph = frame.paragraphs[0] if index == 0 else frame.add_paragraph()
+            paragraph.text = line
+            paragraph.alignment = align
+            paragraph.font.name = "Aptos"
+            paragraph.font.size = Pt(size)
+            paragraph.font.bold = bold
+            paragraph.font.color.rgb = color
+        return shape
+
+    def add_card(slide, x, y, w, h, heading, body, accent=teal, body_size=17):
+        box = slide.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE,
+            Inches(x), Inches(y), Inches(w), Inches(h),
+        )
+        box.fill.solid()
+        box.fill.fore_color.rgb = white
+        box.line.color.rgb = RGBColor(218, 226, 231)
+        strip = slide.shapes.add_shape(
+            MSO_SHAPE.RECTANGLE,
+            Inches(x), Inches(y), Inches(0.09), Inches(h),
+        )
+        strip.fill.solid()
+        strip.fill.fore_color.rgb = accent
+        strip.line.fill.background()
+        add_text(slide, heading, x + 0.25, y + 0.12, w - 0.45, 0.42,
+                 size=16, color=navy, bold=True)
+        add_text(slide, body, x + 0.25, y + 0.62, w - 0.48, h - 0.76,
+                 size=body_size, color=ink, valign=MSO_ANCHOR.TOP)
+
+    def new_slide(title, number, dark=False):
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.background.fill.solid()
+        slide.background.fill.fore_color.rgb = navy if dark else pale
+        if not dark:
+            band = slide.shapes.add_shape(
+                MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, Inches(0.12)
+            )
+            band.fill.solid()
+            band.fill.fore_color.rgb = teal
+            band.line.fill.background()
+            add_text(slide, title, 0.65, 0.35, 12, 0.65, 27, navy, True)
+            add_text(slide, f"PEDRO BUENO PEREYRA  |  TP FINAL  |  {number:02d}",
+                     0.65, 7.12, 12, 0.2, 9, muted)
+        return slide
+
+    # 1. Portada
+    slide = new_slide("", 1, dark=True)
+    slide.shapes.add_shape(
+        MSO_SHAPE.OVAL, Inches(9.25), Inches(-1.5), Inches(5.1), Inches(5.1)
+    ).fill.solid()
+    slide.shapes[-1].fill.fore_color.rgb = teal
+    slide.shapes[-1].line.fill.background()
+    slide.shapes.add_shape(
+        MSO_SHAPE.OVAL, Inches(10.2), Inches(3.9), Inches(4.0), Inches(4.0)
+    ).fill.solid()
+    slide.shapes[-1].fill.fore_color.rgb = RGBColor(34, 52, 83)
+    slide.shapes[-1].line.fill.background()
+    add_text(slide, "PROYECTO INTEGRADOR  |  IFTS N.º 18",
+             0.9, 0.85, 8.6, 0.45, 14, orange, True)
+    add_text(slide, "Riesgo de abandono\nde empleados",
+             0.9, 1.55, 9.5, 2.0, 37, white, True)
+    add_text(slide, "Machine learning + API + aplicación web",
+             0.95, 3.85, 8.7, 0.6, 21, RGBColor(205, 218, 228))
+    add_text(slide, STUDENT_NAME, 0.95, 5.85, 7.5, 0.45, 18, white, True)
+    add_text(slide, "Demostración académica; no reemplaza decisiones humanas.",
+             0.95, 6.35, 9.5, 0.4, 12, RGBColor(205, 218, 228))
+
+    # 2. Problema
+    slide = new_slide("1. El problema que queremos resolver", 2)
+    add_card(
+        slide, 0.75, 1.35, 5.75, 3.1, "Pregunta",
+        "¿Podemos estimar si un empleado podría abandonar la empresa a partir "
+        "de algunas características laborales?",
+        accent=teal, body_size=20,
+    )
+    add_card(
+        slide, 6.8, 1.35, 5.75, 3.1, "Uso responsable",
+        "La predicción podría orientar una conversación o una encuesta de clima. "
+        "No debe usarse para despedir, sancionar ni etiquetar automáticamente.",
+        accent=orange, body_size=19,
+    )
+    add_text(slide, "Objetivo: construir una demostración completa, desde los datos hasta una app web.",
+             1.0, 5.25, 11.4, 0.8, 22, navy, True, PP_ALIGN.CENTER)
+
+    # 3. Datos
+    slide = new_slide("2. Los datos y qué significa la etiqueta", 3)
+    add_card(
+        slide, 0.75, 1.3, 3.8, 3.55, "Dataset",
+        "1.470 filas, 35 columnas\n\nDataset IBM HR de demostración distribuido en Kaggle; no son empleados reales de IBM.",
+        accent=teal, body_size=17,
+    )
+    add_card(
+        slide, 4.77, 1.3, 3.8, 3.55, "Variables de entrada",
+        "Edad, área, rol, salario, satisfacción, antigüedad, horas extra, distancia, equilibrio y promoción.",
+        accent=orange, body_size=16,
+    )
+    add_card(
+        slide, 8.78, 1.3, 3.8, 3.55, "Objetivo",
+        "1.233 No\n\n237 Yes\n\nObjetivo: Attrition",
+        accent=green, body_size=20,
+    )
+    add_text(
+        slide,
+        "Importante: dataset de demostración; las métricas no demuestran el rendimiento en una empresa real.",
+        0.95, 5.45, 11.4, 0.8, 18, red, True, PP_ALIGN.CENTER,
+    )
+
+    # 4. Pipeline y comparación de modelos
+    slide = new_slide("3. Cómo entrenamos el modelo", 4)
+    steps = [
+        ("Datos", "10 variables"),
+        ("Preparación", "Escalado numérico\n+ One-Hot"),
+        ("Comparación", "Regresión Logística\nvs. Random Forest"),
+        ("Selección", "Mayor F1 CV\nsolo en train"),
     ]
+    x_positions = [0.65, 3.8, 6.95, 10.1]
+    for i, (head, body) in enumerate(steps):
+        add_card(slide, x_positions[i], 1.65, 2.55, 2.35,
+                 head, body, accent=teal if i != 3 else orange, body_size=16)
+        if i < len(steps) - 1:
+            add_text(slide, "→", x_positions[i] + 2.62, 2.35, 0.42, 0.5,
+                     26, teal, True, PP_ALIGN.CENTER)
+    add_text(
+        slide,
+        "Se divide el dataset en 80% para entrenamiento y 20% para prueba. "
+        "Se usa class_weight='balanced'. La prueba se reserva hasta terminar "
+        "la selección; la validación cruzada se aplica solo al entrenamiento.",
+        1.0, 4.75, 11.3, 1.1, 18, navy, False, PP_ALIGN.CENTER,
+    )
+    add_text(
+        slide,                 "Resultado: Random Forest obtuvo el mayor F1 CV (51,08%) y quedó exportado en modelo.joblib.",
+        1.0, 6.0, 11.3, 0.55, 17, green, True, PP_ALIGN.CENTER,
+    )
 
-    for titulo, cuerpo in slides:
-        slide = prs.slides.add_slide(prs.slide_layouts[5])
-        fill = slide.background.fill
-        fill.solid()
-        fill.fore_color.rgb = RGBColor(238, 243, 247)
+    # 5. Métricas
+    slide = new_slide("4. Qué tan bien funciona", 5)
+    metrics = [
+        ("Accuracy", "82,99%", "Aciertos totales"),
+        ("Precision", "45,71%", "Alertas correctas"),
+        ("Recall", "34,04%", "Abandonos detectados"),
+        ("F1", "39,02%", "Balance precision/recall"),
+        ("ROC-AUC", "75,18%", "Separación entre clases"),
+    ]
+    for index, (name, value, desc) in enumerate(metrics):
+        x = 0.55 + index * 2.57
+        shape = slide.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE,
+            Inches(x), Inches(1.45), Inches(2.35), Inches(2.15),
+        )
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = white
+        shape.line.color.rgb = RGBColor(218, 226, 231)
+        add_text(slide, name, x + 0.12, 1.7, 2.1, 0.4, 15, muted, True, PP_ALIGN.CENTER)
+        add_text(slide, value, x + 0.1, 2.15, 2.15, 0.65, 25, teal, True, PP_ALIGN.CENTER)
+        add_text(slide, desc, x + 0.15, 2.9, 2.05, 0.45, 12, ink, False, PP_ALIGN.CENTER)
+    add_card(
+        slide, 0.85, 4.15, 5.55, 1.65, "Matriz de confusión",
+        "228 permanencias correctas · 16 abandonos detectados\n"
+        "19 falsas alarmas · 31 abandonos no detectados",
+        accent=orange, body_size=14,
+    )
+    add_card(
+        slide, 6.7, 4.15, 5.75, 1.65, "Lectura honesta",
+        "Aunque Accuracy es alta, Recall es 34,04%: detecta pocos abandonos. "
+        "Hay fuerte desbalance de clases.",
+        accent=red, body_size=14,
+    )
 
-        title_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.7), Inches(11.7), Inches(1.2))
-        title = title_box.text_frame.paragraphs[0]
-        title.text = titulo
-        title.font.size = Pt(30)
-        title.font.bold = True
-        title.font.color.rgb = RGBColor(23, 35, 60)
+    # 6. Predicción y niveles
+    slide = new_slide("5. Cómo se obtiene una predicción", 6)
+    add_card(
+        slide, 0.8, 1.35, 5.65, 3.65, "Ejemplo de respuesta",
+        "Ejemplo: probabilidad 66,06%\n\n"
+        "Umbral de clase: 50%\n"
+        "Como 66,06% supera 50%, predice “Probable abandono”.",
+        accent=teal, body_size=19,
+    )
+    add_card(
+        slide, 6.7, 1.35, 5.7, 3.65, "Nivel visual de riesgo",
+        "Bajo: < 45%\n\nMedio: 45% a 69,99%\n\nAlto: ≥ 70%",
+        accent=orange, body_size=20,
+    )
+    add_text(
+        slide,
+        "La probabilidad es una estimación del modelo, no una certeza ni una explicación causal.",
+        0.9, 5.5, 11.5, 0.7, 18, red, True, PP_ALIGN.CENTER,
+    )
 
-        body_box = slide.shapes.add_textbox(Inches(1), Inches(2), Inches(11), Inches(4))
-        body = body_box.text_frame.paragraphs[0]
-        body.text = cuerpo
-        body.font.size = Pt(16 if "https://" in cuerpo else 22)
-        body.font.color.rgb = RGBColor(38, 50, 56)
+    # 7. Arquitectura de la aplicación
+    slide = new_slide("6. De la pantalla a la predicción", 7)
+    flow = [
+        ("Formulario", "HTML / CSS"),
+        ("Solicitud", "JavaScript\nfetch + JSON"),
+        ("API", "FastAPI\nPydantic"),
+        ("Modelo", "Pipeline\njoblib"),
+        ("Respuesta", "Probabilidad\n+ riesgo"),
+    ]
+    x_positions = [0.55, 3.1, 5.65, 8.2, 10.75]
+    for index, (head, body) in enumerate(flow):
+        shape = slide.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE,
+            Inches(x_positions[index]), Inches(2.0), Inches(2.05), Inches(1.75),
+        )
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = white
+        shape.line.color.rgb = teal
+        add_text(slide, head, x_positions[index] + 0.1, 2.2, 1.85, 0.4,
+                 15, navy, True, PP_ALIGN.CENTER)
+        add_text(slide, body, x_positions[index] + 0.1, 2.75, 1.85, 0.7,
+                 14, ink, False, PP_ALIGN.CENTER)
+        if index < len(flow) - 1:
+            add_text(slide, "→", x_positions[index] + 2.05, 2.55, 0.45, 0.5,
+                     24, orange, True, PP_ALIGN.CENTER)
+    add_card(
+        slide, 1.0, 4.55, 5.4, 1.45, "GET /health",
+        "Confirma que la API y el modelo están disponibles.",
+        accent=green, body_size=15,
+    )
+    add_card(
+        slide, 6.85, 4.55, 5.4, 1.45, "POST /predecir",
+        "Valida los datos; responde 200 si son válidos y 422 si hay errores.",
+        accent=orange, body_size=15,
+    )
+
+    # 8. Publicación
+    slide = new_slide("7. Aplicación publicada", 8)
+    add_card(
+        slide, 0.8, 1.35, 5.75, 3.3, "Aplicación en Render",
+        APP_URL + "\n\n"
+        "Render ejecuta FastAPI y sirve también el frontend. "
+        "En plan gratuito puede tardar en responder tras un periodo inactivo.",
+        accent=teal, body_size=17,
+    )
+    add_card(
+        slide, 6.8, 1.35, 5.75, 3.3, "Repositorio del proyecto",
+        GITHUB_URL + "\n\n"
+        "Incluye el código, el entrenamiento, los tests y el modelo exportado.",
+        accent=orange, body_size=17,
+    )
+    add_text(slide, "Demo: completar el formulario, observar la probabilidad y probar una entrada inválida.",
+             0.95, 5.45, 11.5, 0.75, 19, navy, True, PP_ALIGN.CENTER)
+
+    # 9. Tests y errores reales
+    slide = new_slide("8. Pruebas y problemas resueltos", 9)
+    add_card(
+        slide, 0.8, 1.3, 5.75, 3.9, "Verificaciones",
+        "4 tests aprobados:\n"
+        "• Estado /health\n"
+        "• Predicción válida\n"
+        "• Campo faltante → HTTP 422\n"
+        "• Tipo incorrecto → HTTP 422",
+        accent=green, body_size=17,
+    )
+    add_card(
+        slide, 6.8, 1.3, 5.75, 3.9, "Durante el desarrollo",
+        "• Puerto 8000 ocupado en Windows (10048); se usó 8080.\n\n"
+        "• Error de formato al imprimir métricas; se separaron números y textos.\n\n"
+        "No hubo errores en el deploy de Render.",
+        accent=orange, body_size=16,
+    )
+    add_text(slide, "Los tests comprueban comportamiento técnico, no la calidad real de las predicciones.",
+             1.0, 5.75, 11.2, 0.65, 17, muted, False, PP_ALIGN.CENTER)
+
+    # 10. Límites y ética
+    slide = new_slide("9. Límites y uso responsable", 10)
+    add_card(
+        slide, 0.8, 1.35, 5.75, 3.6, "Límites técnicos",
+        "• Dataset de demostración, no empleados reales.\n"
+        "• Recall bajo para la clase Yes.\n"
+        "• El plan gratuito puede dormir.\n"
+        "• La primera petición puede demorar.",
+        accent=orange, body_size=17,
+    )
+    add_card(
+        slide, 6.8, 1.35, 5.75, 3.6, "Límites éticos",
+        "• Una predicción puede equivocarse.\n"
+        "• Correlación no significa causalidad.\n"
+        "• No automatizar despidos ni sanciones.\n"
+        "• Proteger la privacidad y revisar sesgos.",
+        accent=red, body_size=17,
+    )
+    add_text(slide, "La app es una demostración académica, no una herramienta de decisión laboral.",
+             0.9, 5.5, 11.5, 0.7, 18, navy, True, PP_ALIGN.CENTER)
+
+    # 11. Cierre y declaración de IA
+    slide = new_slide("10. Cierre", 11, dark=True)
+    add_text(slide, "¿Qué demuestra el proyecto?", 0.9, 0.7, 11.5, 0.65,
+             30, white, True)
+    add_text(
+        slide,
+        "Un modelo entrenado y evaluado\n"
+        "Una API que valida y responde\n"
+        "Una interfaz web conectada\n"
+        "Una publicación accesible",
+        1.0, 1.7, 6.0, 2.7, 22, white,
+    )
+    add_text(
+        slide,
+        "Próximas mejoras\n"
+        "• Datos reales y autorizados\n"
+        "• Explicabilidad\n"
+        "• Ajuste del umbral",
+        7.2, 1.7, 5.0, 2.7, 19, orange, True,
+    )
+    add_text(
+        slide,
+        "Uso de IA: asistente para resolver dudas, evaluar decisiones y apoyar la implementación. "
+        "Se verificó con ejecución local, API y tests.",
+        1.0, 5.2, 11.3, 1.0, 15, RGBColor(205, 218, 228),
+    )
+    add_text(slide, f"{STUDENT_NAME}  |  IFTS N.º 18",
+             1.0, 6.65, 11.3, 0.35, 13, white, True, PP_ALIGN.CENTER)
 
     prs.save(PPT_PATH)
 

@@ -33,9 +33,11 @@ TP_Final/
 
 ## Dataset y modelo
 
-El proyecto usa un dataset sintético y reproducible creado en `entrenamiento.py`. Es válido como dataset de prueba. Contiene 2000 registros y una variable objetivo binaria: `abandono`.
+El proyecto utiliza `WA_Fn-UseC_-HR-Employee-Attrition.csv`, un dataset de demostración de IBM HR distribuido en Kaggle. Contiene 1470 filas y 35 columnas; la etiqueta es `Attrition` (`Yes`/`No`). Es un dataset ficticio/de demostración, no registros reales de empleados de IBM.
 
-Se comparan dos candidatos: Regresión Logística y Random Forest. El pipeline selecciona automáticamente el modelo con mayor F1 para exportarlo. Ambos candidatos usan:
+El entrenamiento utiliza diez variables: `Age`, `Department`, `JobRole`, `MonthlyIncome`, `JobSatisfaction`, `YearsAtCompany`, `OverTime`, `DistanceFromHome`, `WorkLifeBalance` y `YearsSinceLastPromotion`. No se usan identificadores ni atributos como `Gender`.
+
+Se comparan dos candidatos: Regresión Logística y Random Forest. La selección se realiza mediante F1 promedio en validación cruzada estratificada de 5 particiones sobre el conjunto de entrenamiento; el conjunto de prueba se reserva para la evaluación final. Ambos candidatos usan:
 
 - `StandardScaler` para variables numéricas.
 - `OneHotEncoder` para variables categóricas.
@@ -44,14 +46,23 @@ Se comparan dos candidatos: Regresión Logística y Random Forest. El pipeline s
 El modelo final se exporta a `TP_Final/app/modelo/modelo.joblib`.
 Los resultados actuales son:
 
-- Accuracy: 60.25%.
-- Precision: 60.09%.
-- Recall: 65.69%.
-- F1: 62.76%.
-- ROC-AUC: 63.59%.
-- F1 medio con validación cruzada de 5 particiones: 61.71%.
+- Modelo seleccionado: Random Forest.
+- F1 medio de validación cruzada: 51.08% (desviación estándar 5.63 puntos porcentuales).
+- Accuracy en prueba: 82.99%.
+- Precision en prueba: 45.71%.
+- Recall en prueba: 34.04%.
+- F1 en prueba: 39.02%.
+- ROC-AUC en prueba: 75.18%.
 
-Random Forest fue seleccionado por tener el mayor F1 en la comparación.
+La prueba final contiene 294 registros y no se utiliza para seleccionar el modelo. El dataset está desbalanceado: 237 `Yes` y 1233 `No`; por eso Accuracy sola puede ser engañosa. En la matriz de confusión de prueba, el modelo detectó 16 de 47 casos `Yes`, omitió 31 y generó 19 falsas alarmas.
+
+Para reentrenar, ejecutar desde la raíz del repositorio:
+
+```powershell
+python TP_Final/notebook/entrenamiento.py
+```
+
+El CSV debe permanecer en `TP_Final/WA_Fn-UseC_-HR-Employee-Attrition.csv`.
 
 ## API
 
@@ -65,9 +76,9 @@ Random Forest fue seleccionado por tener el mayor F1 en la comparación.
 La opción recomendada es publicar todo el servicio en Render:
 
 1. Conectar el repositorio de GitHub.
-2. Configurar el directorio raíz del servicio como `TP_Final/app/backend`.
-3. Build: `pip install -r requirements.txt`.
-4. Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+2. Dejar **Root Directory** vacío para que los comandos se ejecuten desde la raíz del repositorio.
+3. Build: `pip install -r TP_Final/app/backend/requirements.txt`.
+4. Start: `uvicorn TP_Final.app.backend.main:app --host 0.0.0.0 --port $PORT`.
 5. Render sirve el frontend desde `/` y la API desde `/health` y `/predecir`.
 
 Como frontend y backend quedan en el mismo dominio no es necesario resolver CORS. El middleware CORS también está habilitado para permitir un frontend separado.

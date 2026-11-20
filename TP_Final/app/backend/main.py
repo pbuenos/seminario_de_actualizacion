@@ -15,16 +15,20 @@ MODEL_PATH = Path(__file__).resolve().parents[1] / "modelo" / "modelo.joblib"
 class EntradaEmpleado(BaseModel):
     edad: int = Field(ge=18, le=75)
     departamento: Literal[
-        "Ventas",
-        "Investigacion y Desarrollo",
-        "Recursos Humanos",
+        "Sales",
+        "Research & Development",
+        "Human Resources",
     ]
     rol: Literal[
-        "Ejecutivo comercial",
-        "Cientifico",
-        "Analista",
-        "Gerente",
-        "Especialista",
+        "Healthcare Representative",
+        "Laboratory Technician",
+        "Manager",
+        "Manufacturing Director",
+        "Research Director",
+        "Research Scientist",
+        "Sales Executive",
+        "Sales Representative",
+        "Human Resources",
     ]
     salario_mensual: float = Field(ge=0)
     satisfaccion_laboral: int = Field(ge=1, le=4)
@@ -51,6 +55,18 @@ app.add_middleware(
 modelo_payload = joblib.load(MODEL_PATH)
 modelo = modelo_payload["model"]
 feature_names = modelo_payload["feature_names"]
+ENTRADA_A_DATASET = {
+    "Age": "edad",
+    "Department": "departamento",
+    "JobRole": "rol",
+    "MonthlyIncome": "salario_mensual",
+    "JobSatisfaction": "satisfaccion_laboral",
+    "YearsAtCompany": "anos_en_la_empresa",
+    "OverTime": "horas_extras",
+    "DistanceFromHome": "distancia_al_hogar",
+    "WorkLifeBalance": "equilibrio_vida_trabajo",
+    "YearsSinceLastPromotion": "anos_desde_ultimo_ascenso",
+}
 
 
 @app.get("/health")
@@ -59,12 +75,22 @@ def health():
         "estado": "ok",
         "modelo": modelo_payload.get("model_name", "modelo"),
         "scikit_learn": modelo_payload["sklearn_version"],
+        "dataset": modelo_payload["dataset_name"],
     }
 
 
 @app.post("/predecir")
 def predecir(datos: EntradaEmpleado):
-    fila = pd.DataFrame([{campo: getattr(datos, campo) for campo in feature_names}])
+    fila = pd.DataFrame(
+        [
+            {
+                campo_dataset: getattr(datos, campo_api)
+                for campo_dataset, campo_api in ENTRADA_A_DATASET.items()
+                if campo_dataset in feature_names
+            }
+        ],
+        columns=feature_names,
+    )
     probabilidad_abandono = float(modelo.predict_proba(fila)[0][1])
     prediccion = int(probabilidad_abandono >= 0.5)
 
