@@ -14,8 +14,11 @@ from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer
 
 
 ROOT = Path(__file__).resolve().parent
-PDF_PATH = ROOT / "TPF_Apellido_Nombre.pdf"
-PPT_PATH = ROOT / "TPF_Apellido_Nombre.pptx"
+STUDENT_NAME = "Pedro Bueno Pereyra"
+PDF_PATH = ROOT / "TPF_Pedro_Bueno_Pereyra.pdf"
+PPT_PATH = ROOT / "TPF_Pedro_Bueno_Pereyra.pptx"
+APP_URL = "https://tp-final-deb0.onrender.com/"
+GITHUB_URL = "https://github.com/pbuenos/seminario_de_actualizacion"
 
 NAVY = colors.HexColor("#17233C")
 TEAL = colors.HexColor("#008C95")
@@ -52,13 +55,15 @@ def crear_pdf() -> None:
 
     story = [
         Spacer(1, 15 * mm),
-        p("TPF_Apellido_Nombre", "TituloTP"),
+        p("TPF_Pedro_Bueno_Pereyra", "TituloTP"),
         p("Riesgo de abandono de empleados", "TituloTP"),
         Spacer(1, 8 * mm),
-        p("<b>Alumno/a:</b> Apellido, Nombre"),
+        p(f"<b>Alumno:</b> {STUDENT_NAME}"),
         p("<b>Institucion:</b> IFTS N.º 18"),
         p("<b>Materia:</b> Seminario de Actualizacion"),
         p("<b>Fecha:</b> 20/11/2026"),
+        p(f'<b>Aplicacion:</b> <link href="{APP_URL}">{APP_URL}</link>'),
+        p(f'<b>Repositorio:</b> <link href="{GITHUB_URL}">{GITHUB_URL}</link>'),
         PageBreak(),
 
         p("A. La arquitectura", "SeccionTP"),
@@ -146,8 +151,8 @@ def crear_pdf() -> None:
             "holgadamente en el limite de memoria indicado para esta entrega."
         ),
         p(
-            "<b>Estado real del deploy:</b> completar los enlaces y capturas despues "
-            "de crear el Web Service en Render."
+            f'<b>Aplicacion publicada:</b> <link href="{APP_URL}">{APP_URL}</link>. '
+            f'<b>Repositorio:</b> <link href="{GITHUB_URL}">{GITHUB_URL}</link>.'
         ),
         p("5. Backend encendido o dormido", "PreguntaTP"),
         p(
@@ -159,6 +164,11 @@ def crear_pdf() -> None:
 
         p("C. Lo que se rompió", "SeccionTP"),
         p("6. Errores reales documentados", "PreguntaTP"),
+        p(
+            "Durante la publicacion en Render no se registraron errores. Los "
+            "siguientes dos incidentes ocurrieron durante el desarrollo y las "
+            "pruebas locales, no durante el deploy."
+        ),
         p(
             "<b>Error 1: puerto ocupado.</b> Mensaje: "
             "<i>[Errno 10048] solo se permite un uso de cada direccion de socket "
@@ -199,9 +209,10 @@ def crear_pdf() -> None:
         ),
         p("Uso de IA generativa", "SeccionTP"),
         p(
-            "Completar aqui con una declaracion honesta: qué partes se resolvieron "
-            "con IA, cómo se verificaron mediante tests, ejecucion local y revision "
-            "del codigo."
+            "Se utilizo IA como asistente para resolver dudas, evaluar decisiones "
+            "y apoyar la implementacion de partes del proyecto. Sus resultados se "
+            "verificaron ejecutando la aplicacion localmente, probando la API y "
+            "corriendo los tests."
         ),
     ]
 
@@ -222,16 +233,17 @@ def crear_ppt() -> None:
     prs.slide_height = Inches(7.5)
 
     slides = [
-        ("Riesgo de abandono de empleados", "Apellido, Nombre | IFTS N.º 18"),
+        ("Riesgo de abandono de empleados", f"{STUDENT_NAME} | IFTS N.º 18"),
         ("Problema y datos", "Predecir abandono laboral. Dataset sintetico reproducible de 2000 registros."),
         ("Datos y modelo", "Se compararon Regresion Logistica y Random Forest. Random Forest tuvo el mejor F1."),
         ("Metricas finales", "Accuracy 60.25% | Precision 60.09% | Recall 65.69% | F1 62.76% | ROC-AUC 63.59%"),
         ("Arquitectura", "Navegador -> frontend -> POST JSON -> FastAPI -> modelo.joblib -> respuesta"),
         ("Contrato y demo", "GET /health y POST /predecir. Pydantic valida 422. Demo valida y entrada invalida."),
-        ("Deploy", "Render recomendado. Alternativas: Hugging Face Spaces y Vercel. Modelo: 5.60 MB."),
-        ("Error real", "Puerto 8000 ocupado: error 10048 en Windows. Se resolvio con el puerto 8080."),
+        ("Deploy", f"Render: {APP_URL}\nGitHub: {GITHUB_URL}"),
+        ("Errores reales", "No hubo errores durante el deploy. En desarrollo local: puerto 8000 ocupado (10048), se cambió a 8080; error de formato al imprimir métricas, corregido separando textos y números."),
         ("Limites y seguridad", "Arranque en frio, 1000 usuarios simultaneos, plan terminado, secretos fuera de GitHub."),
-        ("Conclusion y próximos pasos", "Proyecto tecnico funcionando. Mejoras: datos reales, explicabilidad y ajuste de umbral."),
+        ("Uso de IA y conclusion", "IA como asistente para resolver dudas, evaluar decisiones y apoyar la implementacion. Verificacion con ejecucion local, API y tests."),
+        ("Conclusión y próximos pasos", "Proyecto técnico funcionando. Mejoras: datos reales, explicabilidad y ajuste de umbral."),
     ]
 
     for titulo, cuerpo in slides:
@@ -250,7 +262,7 @@ def crear_ppt() -> None:
         body_box = slide.shapes.add_textbox(Inches(1), Inches(2), Inches(11), Inches(4))
         body = body_box.text_frame.paragraphs[0]
         body.text = cuerpo
-        body.font.size = Pt(22)
+        body.font.size = Pt(16 if "https://" in cuerpo else 22)
         body.font.color.rgb = RGBColor(38, 50, 56)
 
     prs.save(PPT_PATH)
