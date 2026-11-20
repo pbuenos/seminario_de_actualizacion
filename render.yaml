@@ -5,3 +5,9 @@ services:
     plan: free
     buildCommand: pip install -r Clase_5/requirements-gradio.txt
     startCommand: python Clase_5/gradio_app.py
+  - type: web
+    name: riesgo-abandono-empleados
+    runtime: python
+    plan: free
+    buildCommand: pip install -r TP_Final/app/backend/requirements.txt
+    startCommand: uvicorn TP_Final.app.backend.main:app --host 0.0.0.0 --port $PORT

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="api-base-url" content="">
+  <title>Riesgo de abandono laboral</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="contenedor">
+    <header>
+      <p class="etiqueta">Proyecto de ciencia de datos</p>
+      <h1>Riesgo de abandono</h1>
+      <p class="descripcion">
+        Completá los datos laborales para obtener una estimación automática.
+      </p>
+    </header>
+
+    <form id="formulario">
+      <div class="grid">
+        <label>Edad
+          <input name="edad" type="number" min="18" max="75" value="29" required>
+        </label>
+        <label>Departamento
+          <select name="departamento" required>
+            <option>Ventas</option>
+            <option>Investigacion y Desarrollo</option>
+            <option>Recursos Humanos</option>
+          </select>
+        </label>
+        <label>Rol
+          <select name="rol" required>
+            <option>Ejecutivo comercial</option>
+            <option>Cientifico</option>
+            <option>Analista</option>
+            <option>Gerente</option>
+            <option>Especialista</option>
+          </select>
+        </label>
+        <label>Salario mensual
+          <input name="salario_mensual" type="number" min="0" step="100" value="3200" required>
+        </label>
+        <label>Satisfacción laboral (1 a 4)
+          <input name="satisfaccion_laboral" type="number" min="1" max="4" value="3" required>
+        </label>
+        <label>Años en la empresa
+          <input name="anos_en_la_empresa" type="number" min="0" value="2" required>
+        </label>
+        <label>Horas extras
+          <select name="horas_extras" required>
+            <option value="Yes">Sí</option>
+            <option value="No">No</option>
+          </select>
+        </label>
+        <label>Distancia al hogar (km)
+          <input name="distancia_al_hogar" type="number" min="1" value="15" required>
+        </label>
+        <label>Equilibrio vida-trabajo (1 a 4)
+          <input name="equilibrio_vida_trabajo" type="number" min="1" max="4" value="3" required>
+        </label>
+        <label>Años desde el último ascenso
+          <input name="anos_desde_ultimo_ascenso" type="number" min="0" value="1" required>
+        </label>
+      </div>
+      <button type="submit">Calcular riesgo</button>
+    </form>
+
+    <section id="resultado" aria-live="polite"></section>
+    <p class="aviso">
+      Uso académico: el resultado es orientativo y no debe utilizarse para decidir
+      despidos o sanciones laborales automáticamente.
+    </p>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
