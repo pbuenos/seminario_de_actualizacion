@@ -66,6 +66,10 @@ python TP_Final/notebook/entrenamiento.py
 
 El CSV debe permanecer en `TP_Final/WA_Fn-UseC_-HR-Employee-Attrition.csv`.
 
+## Entregables
+
+El generador produce `TPF_Bueno_Pereyra_Pedro.pdf` y `TPF_Bueno_Pereyra_Pedro.pptx`, siguiendo el formato de nombre de la consigna. La presentación tiene 10 diapositivas.
+
 ## API
 
 - `GET /health`: informa el estado, el modelo cargado, la versión de scikit-learn y el CSV usado.

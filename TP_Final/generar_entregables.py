@@ -10,6 +10,7 @@ from pptx.util import Inches, Pt
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
+from reportlab.graphics.shapes import Drawing, Line, Polygon, Rect, String
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer
@@ -17,8 +18,8 @@ from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer
 
 ROOT = Path(__file__).resolve().parent
 STUDENT_NAME = "Pedro Bueno Pereyra"
-PDF_PATH = ROOT / "TPF_Pedro_Bueno_Pereyra.pdf"
-PPT_PATH = ROOT / "TPF_Pedro_Bueno_Pereyra.pptx"
+PDF_PATH = ROOT / "TPF_Bueno_Pereyra_Pedro.pdf"
+PPT_PATH = ROOT / "TPF_Bueno_Pereyra_Pedro.pptx"
 APP_URL = "https://tp-final-deb0.onrender.com/"
 GITHUB_URL = "https://github.com/pbuenos/seminario_de_actualizacion"
 
@@ -55,9 +56,63 @@ def crear_pdf() -> None:
     def p(texto: str, estilo: str = "CuerpoTP") -> Paragraph:
         return Paragraph(texto, styles[estilo])
 
+    def architecture_diagram():
+        drawing = Drawing(490, 140)
+        drawing.add(String(4, 126, "PUBLICACION DEL CODIGO", fontName="Helvetica-Bold",
+                           fontSize=8, fillColor=NAVY))
+
+        def box(x, y, width, label):
+            drawing.add(Rect(
+                x, y, width, 34, rx=4, ry=4,
+                fillColor=colors.HexColor("#F2F6F8"),
+                strokeColor=TEAL,
+                strokeWidth=1,
+            ))
+            for index, line in enumerate(label.split("\n")):
+                drawing.add(String(
+                    x + width / 2, y + 21 - index * 10, line,
+                    fontName="Helvetica", fontSize=7.5,
+                    fillColor=NAVY, textAnchor="middle",
+                ))
+
+        def arrow(x1, y, x2, label):
+            drawing.add(Line(x1, y, x2 - 4, y,
+                             strokeColor=TEAL, strokeWidth=1))
+            drawing.add(Polygon(
+                [x2 - 4, y, x2 - 8, y + 3, x2 - 8, y - 3],
+                fillColor=TEAL,
+                strokeColor=TEAL,
+            ))
+            drawing.add(String(
+                (x1 + x2) / 2, y + 6, label,
+                fontName="Helvetica", fontSize=6,
+                fillColor=MUTED, textAnchor="middle",
+            ))
+
+        box(4, 82, 100, "PC local\nCSV + entrenamiento")
+        box(197, 82, 100, "GitHub\ncodigo + modelo.joblib")
+        box(390, 82, 96, "Render\nAPI + frontend")
+        arrow(107, 99, 194, "push")
+        arrow(300, 99, 387, "deploy")
+
+        drawing.add(String(4, 64, "USO DE LA APLICACION: JSON DE ENTRADA Y PREDICCION", fontName="Helvetica-Bold",
+                           fontSize=8, fillColor=NAVY))
+        runtime = [
+            (4, 68, "Navegador\nformulario"),
+            (126, 80, "FastAPI\nvalida JSON"),
+            (261, 80, "modelo.joblib\npredice en Render"),
+            (396, 90, "Navegador\nrecibe JSON"),
+        ]
+        for x, width, label in runtime:
+            box(x, 12, width, label)
+        arrow(73, 29, 123, "POST")
+        arrow(208, 29, 258, "features")
+        arrow(343, 29, 393, "resultado")
+        return drawing
+
     story = [
         Spacer(1, 15 * mm),
-        p("TPF_Pedro_Bueno_Pereyra", "TituloTP"),
+        p("TPF_Bueno_Pereyra_Pedro", "TituloTP"),
         p("Riesgo de abandono de empleados", "TituloTP"),
         Spacer(1, 8 * mm),
         p(f"<b>Alumno:</b> {STUDENT_NAME}"),
@@ -90,6 +145,7 @@ def crear_pdf() -> None:
             "<b>uso:</b> navegador -> POST /predecir -> FastAPI -> modelo.joblib "
             "-> respuesta JSON -> navegador."
         ),
+        architecture_diagram(),
 
         p("2. Contrato de la API", "PreguntaTP"),
         p("GET /health", "PreguntaTP"),
@@ -120,11 +176,9 @@ def crear_pdf() -> None:
 
         p("3. CORS", "PreguntaTP"),
         p(
-            "CORS apareceria si frontend y backend quedan en dominios distintos, "
-            "por ejemplo GitHub Pages y Render. Se resolvio habilitando "
-            "CORSMiddleware en FastAPI para metodos GET y POST. Si se publica todo "
-            "dentro de Render no se requiere una solicitud cross-origin, pero la "
-            "configuracion queda lista para una separacion futura."
+            "CORS no aparecio durante la publicacion porque el frontend y el backend "
+            "se sirven desde el mismo dominio de Render. De todos modos se configuro "
+            "CORSMiddleware para GET y POST por si se separan en el futuro."
         ),
         p(
             "Para frontend separado se debe completar api-base-url en index.html "
@@ -139,17 +193,29 @@ def crear_pdf() -> None:
             "directamente, requiere pocas configuraciones y admite FastAPI."
         ),
         p(
-            "<b>Alternativa descartada 1: Hugging Face Spaces.</b> Permite Docker "
-            "y es conocido, pero un servicio puede suspenderse sin uso y las "
-            "condiciones requieren revision."
+            "<b>Alternativa descartada 1: Hugging Face Spaces.</b> El plan gratuito "
+            "puede suspenderse sin uso y FastAPI requiere preparar/configurar un "
+            "contenedor Docker. Render resulto mas directo para conectar el repositorio "
+            "y ejecutar el comando Uvicorn."
         ),
         p(
             "<b>Alternativa descartada 2: Vercel.</b> Puede integrar frontend y "
-            "serverless Python sin CORS, pero el limite de peso y el arranque de "
-            "la funcion resultan menos sencillos para scikit-learn y numpy."
+            "funciones Python sin CORS, pero el empaquetado serverless, sus limites "
+            "de tamano/tiempo y el arranque de dependencias de ML requieren mas "
+            "configuracion. El servicio web de Render admite este proceso sin adaptar "
+            "FastAPI a una funcion serverless."
         ),
         p(
-            "El archivo incluido contiene 1470 filas y 35 columnas; no son registros "
+            "<b>Plan elegido:</b> Render Free ofrece alrededor de 512 MB de RAM y "
+            "puede dormir tras unos 15 minutos sin actividad; el arranque en frio "
+            "puede demorar aproximadamente 30-60 segundos. El modelo ocupa 3.03 MB, "
+            "por debajo de la memoria disponible; el consumo total tambien incluye "
+            "Python, scikit-learn, pandas y numpy."
+        ),
+        p(
+            "El dataset WA_Fn-UseC_-HR-Employee-Attrition.csv se obtuvo de la copia "
+            "IBM HR Analytics distribuida en Kaggle. Contiene 1470 filas y 35 "
+            "columnas; no son registros "
             "reales de empleados de IBM. Se usaron diez variables no identificatorias: "
             "edad, departamento, rol, salario, satisfaccion, antiguedad, horas extra, "
             "distancia, equilibrio vida-trabajo y anos desde promocion. La etiqueta "
@@ -182,26 +248,31 @@ def crear_pdf() -> None:
         p("6. Errores reales documentados", "PreguntaTP"),
         p(
             "Durante la publicacion en Render no se registraron errores. Los "
-            "siguientes dos incidentes ocurrieron durante el desarrollo y las "
-            "pruebas locales, no durante el deploy."
+            "siguientes incidentes reales ocurrieron durante el desarrollo local."
         ),
         p(
-            "<b>Error 1: puerto ocupado.</b> Mensaje: "
-            "<i>[Errno 10048] solo se permite un uso de cada direccion de socket "
-            "para el protocolo/direccion</i>. Aparecio al iniciar Uvicorn en 8000 "
-            "en Windows. La causa fue que el puerto estaba ocupado o reservado. "
-            "Se resolvio iniciando la app en 8080 y configurando frontend y README "
-            "con el mismo puerto."
+            "<b>Error 1: puerto ocupado.</b> Lugar: terminal de Windows al iniciar "
+            "Uvicorn local. Mensaje: <i>[Errno 10048] error while attempting to bind "
+            "on address ('127.0.0.1', 8000): [winerror 10048] solo se permite un uso "
+            "de cada direccion de socket</i>. Causa: el puerto 8000 estaba ocupado "
+            "o reservado. Solucion: 1) se eligio el puerto 8080; 2) se ajusto la "
+            "configuracion del frontend y README; 3) se comprobo /health y la pagina "
+            "con HTTP 200."
         ),
         p(
-            "<b>Error 2: formato de impresion de metricas.</b> El script intento "
-            "aplicar formato decimal a una cadena al imprimir el resumen. Aparecio "
-            "después de comparar modelos. Se corrigio limitando el formato decimal "
-            "a las metricas numericas y mostrando por separado la comparacion."
+            "<b>Error 2: impresion de metricas.</b> Lugar: "
+            "<i>TP_Final/notebook/entrenamiento.py</i>, al imprimir el resultado del "
+            "entrenamiento. Mensaje: <i>ValueError: Unknown format code 'f' for "
+            "object of type 'str'</i>. Causa: el resumen mezclaba metricas numericas "
+            "con valores textuales y aplicaba formato decimal a todos. Solucion: "
+            "1) se identificaron explicitamente las metricas numericas; 2) se "
+            "imprimieron con formato decimal; 3) la matriz, el reporte y el nombre "
+            "del modelo se muestran por separado; 4) se reejecuto el entrenamiento."
         ),
         p(
-            "Verificacion posterior: los 4 tests aprobados comprueban health, "
-            "prediccion valida, campo faltante y tipo incorrecto."
+            "Verificacion posterior: los 6 tests aprobados cubren health, prediccion "
+            "valida, errores 422 por campo faltante/tipo incorrecto/categoria ajena "
+            "y categorias validas del dataset."
         ),
 
         p("D. Límites y seguridad", "SeccionTP"),
@@ -506,14 +577,19 @@ def crear_ppt() -> None:
         "Incluye el código, el entrenamiento, los tests y el modelo exportado.",
         accent=orange, body_size=17,
     )
+    add_text(
+        slide,
+        "Alternativas descartadas: Hugging Face Spaces requiere Docker; Vercel añade límites y configuración serverless. Render fue más directo para FastAPI.",
+        0.8, 4.78, 11.8, 0.55, 13, muted, False, PP_ALIGN.CENTER,
+    )
     add_text(slide, "Demo: completar el formulario, observar la probabilidad y probar una entrada inválida.",
-             0.95, 5.45, 11.5, 0.75, 19, navy, True, PP_ALIGN.CENTER)
+             0.95, 5.5, 11.5, 0.7, 18, navy, True, PP_ALIGN.CENTER)
 
     # 9. Tests y errores reales
     slide = new_slide("8. Pruebas y problemas resueltos", 9)
     add_card(
         slide, 0.8, 1.3, 5.75, 3.9, "Verificaciones",
-        "4 tests aprobados:\n"
+        "6 tests aprobados:\n"
         "• Estado /health\n"
         "• Predicción válida\n"
         "• Campo faltante → HTTP 422\n"
@@ -530,55 +606,38 @@ def crear_ppt() -> None:
     add_text(slide, "Los tests comprueban comportamiento técnico, no la calidad real de las predicciones.",
              1.0, 5.75, 11.2, 0.65, 17, muted, False, PP_ALIGN.CENTER)
 
-    # 10. Límites y ética
-    slide = new_slide("9. Límites y uso responsable", 10)
+    # 10. Cierre, límites, seguridad y próximos pasos
+    slide = new_slide("", 10, dark=True)
+    add_text(slide, "9. Límites, seguridad y próximos pasos",
+             0.75, 0.45, 11.8, 0.7, 27, white, True)
     add_card(
-        slide, 0.8, 1.35, 5.75, 3.6, "Límites técnicos",
+        slide, 0.75, 1.45, 5.75, 2.8, "Límites y seguridad",
         "• Dataset de demostración, no empleados reales.\n"
-        "• Recall bajo para la clase Yes.\n"
-        "• El plan gratuito puede dormir.\n"
-        "• La primera petición puede demorar.",
-        accent=orange, body_size=17,
+        "• Recall bajo para la clase Yes; el modelo omite casos.\n"
+        "• El plan gratuito puede dormir; 1000 usuarios pueden superar recursos.\n"
+        "• No automatizar decisiones laborales ni publicar secretos.",
+        accent=red, body_size=14,
     )
     add_card(
-        slide, 6.8, 1.35, 5.75, 3.6, "Límites éticos",
-        "• Una predicción puede equivocarse.\n"
-        "• Correlación no significa causalidad.\n"
-        "• No automatizar despidos ni sanciones.\n"
-        "• Proteger la privacidad y revisar sesgos.",
-        accent=red, body_size=17,
-    )
-    add_text(slide, "La app es una demostración académica, no una herramienta de decisión laboral.",
-             0.9, 5.5, 11.5, 0.7, 18, navy, True, PP_ALIGN.CENTER)
-
-    # 11. Cierre y declaración de IA
-    slide = new_slide("10. Cierre", 11, dark=True)
-    add_text(slide, "¿Qué demuestra el proyecto?", 0.9, 0.7, 11.5, 0.65,
-             30, white, True)
-    add_text(
-        slide,
-        "Un modelo entrenado y evaluado\n"
-        "Una API que valida y responde\n"
-        "Una interfaz web conectada\n"
-        "Una publicación accesible",
-        1.0, 1.7, 6.0, 2.7, 22, white,
+        slide, 6.8, 1.45, 5.75, 2.8, "Próximos pasos",
+        "• Datos reales autorizados y mejor documentados.\n"
+        "• Explicar qué variables influyen en cada resultado.\n"
+        "• Evaluar otros umbrales y mejorar el Recall.",
+        accent=teal, body_size=15,
     )
     add_text(
         slide,
-        "Próximas mejoras\n"
-        "• Datos reales y autorizados\n"
-        "• Explicabilidad\n"
-        "• Ajuste del umbral",
-        7.2, 1.7, 5.0, 2.7, 19, orange, True,
+        "Uso de IA: asistente para dudas, opiniones y apoyo a la implementación; "
+        "se verificó con ejecución, API y tests.",
+        0.9, 4.7, 11.5, 1.0, 15, RGBColor(205, 218, 228),
     )
     add_text(
         slide,
-        "Uso de IA: asistente para resolver dudas, evaluar decisiones y apoyar la implementación. "
-        "Se verificó con ejecución local, API y tests.",
-        1.0, 5.2, 11.3, 1.0, 15, RGBColor(205, 218, 228),
+        "Conclusión: integramos modelo, API, frontend y publicación; es una demostración académica.",
+        0.9, 5.9, 11.5, 0.65, 17, orange, True, PP_ALIGN.CENTER,
     )
     add_text(slide, f"{STUDENT_NAME}  |  IFTS N.º 18",
-             1.0, 6.65, 11.3, 0.35, 13, white, True, PP_ALIGN.CENTER)
+             1.0, 6.7, 11.3, 0.35, 12, white, True, PP_ALIGN.CENTER)
 
     prs.save(PPT_PATH)
 
